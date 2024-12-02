@@ -53,6 +53,7 @@ export const DocsTable = ({ docs, loadMore, status }: Props) => {
               <TableHead>&nbsp;</TableHead>
               <TableHead className="hidden md:table-cell">Share</TableHead>
               <TableHead className="hidden md:table-cell">Created at</TableHead>
+              <TableHead>&nbsp;</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

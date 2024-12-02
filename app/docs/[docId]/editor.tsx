@@ -22,8 +22,18 @@ import TextAlign from "@tiptap/extension-text-align";
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
+import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
+import { Threads } from "./threads";
+import { useStorage } from "@liveblocks/react/suspense";
 
-export const Editor = () => {
+export const Editor = ({ initialContent }: { initialContent?: string }) => {
+  const leftMargin = useStorage((root) => root.leftMargin);
+  const rightMargin = useStorage((root) => root.rightMargin);
+
+  const liveblocks = useLiveblocksExtension({
+    initialContent,
+    offlineSupport_experimental: true,
+  });
   const { setEditor } = useEditorStore();
 
   const editor = useEditor({
@@ -50,7 +60,10 @@ export const Editor = () => {
     },
     editable: true,
     extensions: [
-      StarterKit,
+      liveblocks,
+      StarterKit.configure({
+        history: false,
+      }),
       TaskList,
       FontSizeExtension,
       LineHeightExtension.configure({
@@ -114,8 +127,9 @@ export const Editor = () => {
     ],
     editorProps: {
       attributes: {
+        style: `padding-left: ${leftMargin || 56}px; padding-right: ${rightMargin || 56}px;`,
         class:
-          "focus:outline-none border bg-white flex flex-col min-h-[1056px] w-[816px] py-10 px-14 cursor-text",
+          "focus:outline-none border bg-white flex flex-col min-h-[1056px] w-[816px] py-10 cursor-text",
       },
     },
     content: ``,
@@ -126,6 +140,7 @@ export const Editor = () => {
       <Ruler />
       <div className="min-w-max flex justify-center w-[816px] py-4 print:py-0 mx-auto print:w-full print:min-w-0">
         <EditorContent editor={editor} />
+        <Threads editor={editor} />
       </div>
     </div>
   );

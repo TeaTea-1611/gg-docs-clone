@@ -15,6 +15,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { toast } from "sonner";
 
 interface Props {
   docId: Id<"documents">;
@@ -39,10 +40,13 @@ export const RenameDialog = ({
     update({
       id: docId,
       title,
-    }).finally(() => {
-      setIsLoading(false);
-      setIsOpen(false);
-    });
+    })
+      .then(() => toast.success("Document updated"))
+      .catch(() => toast.error("Something went wrong"))
+      .finally(() => {
+        setIsLoading(false);
+        setIsOpen(false);
+      });
   };
 
   return (

@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Props {
   docId: Id<"documents">;
@@ -24,6 +26,7 @@ interface Props {
 export const RemoveDialog = ({ docId, children }: Props) => {
   const remove = useMutation(api.documents.removeById);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   return (
     <AlertDialog>
@@ -45,7 +48,13 @@ export const RemoveDialog = ({ docId, children }: Props) => {
             onClick={(e) => {
               e.stopPropagation();
               setIsLoading(true);
-              remove({ id: docId }).finally(() => setIsLoading(false));
+              remove({ id: docId })
+                .then(() => {
+                  toast.success("Document removed");
+                  router.push("/");
+                })
+                .catch(() => toast.error("Something went wrong"))
+                .finally(() => setIsLoading(false));
             }}
           >
             Delete

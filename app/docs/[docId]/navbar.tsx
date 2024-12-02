@@ -35,9 +35,37 @@ import {
 } from "lucide-react";
 import { BsFilePdf } from "react-icons/bs";
 import { useEditorStore } from "@/store/use-edit-store";
+import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { Avatars } from "./avatars";
+import { Inbox } from "./inbox";
+import { Doc } from "@/convex/_generated/dataModel";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { RenameDialog } from "@/components/rename-dialog";
+import { RemoveDialog } from "@/components/remove-dialog";
 
-export const Navbar = () => {
+interface Props {
+  doc: Doc<"documents">;
+}
+
+export const Navbar = ({ doc }: Props) => {
   const { editor } = useEditorStore();
+  const router = useRouter();
+  const mutation = useMutation(api.documents.create);
+
+  const onNewDoc = () => {
+    mutation({
+      title: "Untitled",
+      initialContent: "",
+    })
+      .then((id) => {
+        toast.success("Document created");
+        router.push(`/docs/${id}`);
+      })
+      .catch(() => toast.error("Something went wrong"));
+  };
 
   const insertTable = ({ rows, cols }: { rows: number; cols: number }) => {
     editor
@@ -69,7 +97,7 @@ export const Navbar = () => {
       type: "application/json",
     });
 
-    onDownload(blob, "document.json");
+    onDownload(blob, `${doc.title}.json`);
   };
 
   const onSaveHTML = () => {
@@ -80,7 +108,7 @@ export const Navbar = () => {
       type: "text/html",
     });
 
-    onDownload(blob, "document.html");
+    onDownload(blob, `${doc.title}.html`);
   };
 
   const onSaveText = () => {
@@ -91,7 +119,7 @@ export const Navbar = () => {
       type: "text/plan",
     });
 
-    onDownload(blob, "document.txt");
+    onDownload(blob, `${doc.title}.txt`);
   };
 
   return (
@@ -101,7 +129,7 @@ export const Navbar = () => {
           <Image src={"/logo.svg"} alt="logo" width={36} height={36} />
         </Link>
         <div className="flex flex-col">
-          <DocInput />
+          <DocInput title={doc.title} id={doc._id} />
           <div className="flex">
             <Menubar className="h-auto p-0 bg-transparent border-none shadow-none">
               <MenubarMenu>
@@ -131,18 +159,28 @@ export const Navbar = () => {
                       </MenubarItem>
                     </MenubarSubContent>
                   </MenubarSub>
-                  <MenubarItem>
+                  <MenubarItem onClick={onNewDoc}>
                     <FilePlusIcon className="mr-2 size-4" />
                     New Document
                   </MenubarItem>
-                  <MenubarItem>
-                    <FilePenIcon className="mr-2 size-4" />
-                    Rename
-                  </MenubarItem>
-                  <MenubarItem>
-                    <TrashIcon className="mr-2 size-4" />
-                    Remove
-                  </MenubarItem>
+                  <RenameDialog docId={doc._id} title={doc.title}>
+                    <MenubarItem
+                      onClick={(e) => e.stopPropagation()}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <FilePenIcon className="mr-2 size-4" />
+                      Rename
+                    </MenubarItem>
+                  </RenameDialog>
+                  <RemoveDialog docId={doc._id}>
+                    <MenubarItem
+                      onClick={(e) => e.stopPropagation()}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <TrashIcon className="mr-2 size-4" />
+                      Remove
+                    </MenubarItem>
+                  </RemoveDialog>
                   <MenubarSeparator />
                   <MenubarItem onClick={() => window.print()}>
                     <PrinterIcon className="mr-2 size-4" />
@@ -262,6 +300,17 @@ export const Navbar = () => {
             </Menubar>
           </div>
         </div>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <Avatars />
+        <Inbox />
+        <OrganizationSwitcher
+          afterCreateOrganizationUrl="/"
+          afterLeaveOrganizationUrl="/"
+          afterSelectOrganizationUrl="/"
+          afterSelectPersonalUrl="/"
+        />
+        <UserButton />
       </div>
     </nav>
   );
